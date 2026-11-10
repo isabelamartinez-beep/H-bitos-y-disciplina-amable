@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centro de Autocuidado & Disciplina Amable</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2canvas para generación del comprobante en PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <style>
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .card-flip {
+      perspective: 1000px;
+    }
+    .card-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .card-flip.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      backface-visibility: hidden;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .breath-circle {
+      animation: pulse-ring 8s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col font-sans antialiased text-slate-200 bg-slate-950 selection:bg-indigo-500 selection:text-white">
+
+  <!-- PANTALLA 1: REGISTRO DE NOMBRE -->
+  <div id="screen-welcome" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+    <div class="glass-panel max-w-md w-full p-8 rounded-3xl shadow-2xl border border-indigo-500/30 text-center">
+      <div class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/20">
+        <i class="fa-solid fa-heart-pulse text-2xl text-white"></i>
+      </div>
+      <h1 class="text-2xl font-bold text-white mb-2">Módulo de Autocuidado</h1>
+      <p class="text-slate-400 text-sm mb-6">Ingresa tu nombre completo para comenzar la experiencia interactiva y generar tu comprobante oficial al finalizar.</p>
+      
+      <form id="form-login" onsubmit="startExperience(event)" class="space-y-4">
+        <div class="text-left">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Nombre y Apellido</label>
+          <input type="text" id="user-name-input" required placeholder="Ej. Ana García López" class="w-full bg-slate-900/80 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none transition">
+        </div>
+        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-rose-600 hover:from-indigo-500 hover:to-rose-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95">
+          Comenzar Experiencia <i class="fa-solid fa-arrow-right ml-2"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NAVEGACIÓN Y ENCABEZADO -->
+  <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-30 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
+        <span class="font-bold text-lg text-white tracking-wide">Salud Mental Universitario</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="text-right hidden sm:block">
+          <p id="nav-user-name" class="text-sm font-medium text-white">Estudiante</p>
+          <p class="text-xs text-indigo-400">Disciplina Amable</p>
+        </div>
+        <button onclick="toggleAudioEngine()" id="btn-audio-toggle" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Ambiente Sonoro">
+          <i class="fa-solid fa-volume-xmark text-lg" id="audio-icon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <!-- SECCIÓN 1: EVALUACIÓN DE CASOS (SIMULADOR) -->
+    <section class="glass-panel p-6 sm:p-8 rounded-3xl relative overflow-hidden">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Recurso Evaluativo</span>
+          <h2 class="text-2xl font-bold text-white mt-1">Simulador de Decisiones Universitario</h2>
+        </div>
+        <!-- Medidores -->
+        <div class="flex items-center gap-4 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+          <div class="text-center px-2">
+            <span class="text-xs text-slate-400 block">Energía</span>
+            <span id="stat-energy" class="text-lg font-bold text-emerald-400">100%</span>
+          </div>
+          <div class="h-8 w-px bg-slate-800"></div>
+          <div class="text-center px-2">
+            <span class="text-xs text-slate-400 block">Autocompasión</span>
+            <span id="stat-compassion" class="text-lg font-bold text-indigo-400">100 pts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta del Caso -->
+      <div id="case-container" class="space-y-6">
+        <!-- Generado dinámicamente -->
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: HERRAMIENTAS SENSORIALES Y COMPLEMENTARIAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- HERRAMIENTA 1: RULETA DE MICRO-RETOS -->
+      <section class="glass-panel p-6 rounded-3xl flex flex-col items-center text-center">
+        <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-circle-notch text-indigo-400 mr-2"></i> Ruleta de Micro-Retos</h3>
+        <p class="text-slate-400 text-sm mb-6">Gira para obtener un compromiso de autocuidado para hoy</p>
+        
+        <div class="relative w-64 h-64 mb-6">
+          <canvas id="roulette-canvas" width="256" height="256" class="w-full h-full rounded-full shadow-2xl"></canvas>
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-8 border-r-8 border-t-16 border-l-transparent border-r-transparent border-t-rose-500 z-10"></div>
+        </div>
+
+        <button onclick="spinRoulette()" id="btn-spin" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-6 rounded-xl transition shadow-lg shadow-indigo-600/30">
+          Girar Ruleta
+        </button>
+
+        <div id="roulette-result" class="mt-4 p-3 bg-slate-900/60 rounded-xl text-slate-300 text-sm min-h-[48px] flex items-center justify-center w-full">
+          Haz clic en girar para descubrir tu reto.
+        </div>
+      </section>
+
+      <!-- HERRAMIENTA 2: RESPIRACIÓN GUIADA -->
+      <section class="glass-panel p-6 rounded-3xl flex flex-col items-center text-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-wind text-teal-400 mr-2"></i> Pausa Activa: Respiración 4-7-8</h3>
+          <p class="text-slate-400 text-sm">Inhala en 4s, sostén 7s, exhala en 8s para desactivar el estrés</p>
+        </div>
+
+        <div class="my-8 relative flex items-center justify-center">
+          <div id="breath-circle" class="w-32 h-32 rounded-full bg-gradient-to-tr from-teal-500/20 to-indigo-500/20 border border-teal-500/40 flex items-center justify-center transition-all duration-1000">
+            <span id="breath-label" class="text-sm font-semibold text-teal-300">Presiona Iniciar</span>
+          </div>
+        </div>
+
+        <button onclick="toggleBreathing()" id="btn-breath" class="bg-teal-600 hover:bg-teal-500 text-white font-medium py-2.5 px-6 rounded-xl transition shadow-lg shadow-teal-600/30">
+          Iniciar Ejercicio
+        </button>
+      </section>
+
+    </div>
+
+    <!-- SECCIÓN 3: CARTAS DE REENCUADRE COGNITIVO -->
+    <section class="glass-panel p-6 sm:p-8 rounded-3xl">
+      <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-repeat text-rose-400 mr-2"></i> Cartas de Reencuadre Cognitivo</h3>
+      <p class="text-slate-400 text-sm mb-6">Toca cada carta para transformar pensamientos punitivos en voz amable</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="cards-container">
+        <!-- Cartas generadas por JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL / DIPLOMA DE ENTREGA PARA CAPTURA -->
+  <div id="modal-certificate" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
+    <div class="max-w-xl w-full my-8">
+      
+      <!-- CONTENEDOR QUE SE CONVIERTE EN IMAGEN (PNG) -->
+      <div id="certificate-node" class="bg-slate-900 p-8 rounded-3xl border-2 border-indigo-500/40 text-center space-y-6 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl"></div>
+        <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-rose-500/10 rounded-full blur-2xl"></div>
+
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-graduation-cap text-indigo-400 text-xl"></i>
+            <span class="font-bold text-white text-sm">Constancia de Evaluación</span>
+          </div>
+          <span class="text-xs text-slate-500" id="cert-date">--/--/----</span>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-1">Módulo: Hábitos Saludables y Disciplina Amable</p>
+          <h2 class="text-2xl font-extrabold text-white" id="cert-user-name">Nombre Estudiante</h2>
+          <p class="text-slate-400 text-xs mt-1">Ha completado satisfactoriamente el simulador evaluativo práctico.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+          <div>
+            <span class="text-xs text-slate-400 block">Autocompasión Final</span>
+            <span id="cert-score" class="text-xl font-bold text-indigo-400">0 pts</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Energía Preservada</span>
+            <span id="cert-energy" class="text-xl font-bold text-emerald-400">0%</span>
+          </div>
+        </div>
+
+        <div class="text-left bg-indigo-950/30 p-4 rounded-xl border border-indigo-800/30">
+          <p class="text-xs font-semibold text-indigo-300 mb-1">Diagnóstico Final:</p>
+          <p id="cert-feedback" class="text-xs text-slate-300 leading-relaxed">Resumen de desempeño...</p>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 text-[10px] text-slate-500 border-t border-slate-800">
+          <span>ID de Validación: <strong id="cert-id">#000000</strong></span>
+          <span>Curso de Salud Mental Universitario</span>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN (FUERA DE LA CAPTURA) -->
+      <div class="mt-4 flex gap-4">
+        <button onclick="downloadCertificate()" class="flex-1 bg-gradient-to-r from-indigo-600 to-rose-600 hover:from-indigo-500 hover:to-rose-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> Descargar Comprobante (PNG)
+        </button>
+        <button onclick="closeCertificate()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl transition">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ESTADO GLOBAL
+    let currentUser = "Estudiante";
+    let energy = 100;
+    let compassion = 100;
+    let currentCaseIndex = 0;
+    let audioCtx = null;
+    let isAudioActive = false;
+    let breathInterval = null;
+
+    // CASOS EVALUATIVOS
+    const cases = [
+      {
+        id: 1,
+        title: "Caso 1: La prueba de medianoche",
+        student: "Sofía",
+        context: "Son las 11:30 PM, llevas 4 horas estudiando sin parar. Te falta revisar 2 temas complejos, tienes dolor de cabeza y notas fatiga cognitiva.",
+        options: [
+          { text: "A) Tomar un café fuerte y estudiar 2 horas más para cubrir todo el temario.", correct: false, energy: -30, compassion: -20, feedback: "La privación de sueño disminuye la retención en el examen." },
+          { text: "B) Cerrar los apuntes, hacer un estiramiento ir a dormir para consolidar memoria.", correct: true, energy: +20, compassion: +15, feedback: "¡Correcto! Proteger el descanso mejora la memoria de trabajo." },
+          { text: "C) Quedarte en la cama leyendo resúmenes en el teléfono móvil.", correct: false, energy: -15, compassion: -10, feedback: "La luz azul altera el ciclo circadiano y el sueño profundo." }
+        ]
+      },
+      {
+        id: 2,
+        title: "Caso 2: La regla del 'Todo o Nada'",
+        student: "Mateo",
+        context: "Te propusiste entrenar 45 minutos diarios. Hoy te despertaste tarde por una entrega y solo te quedan 15 minutos antes de salir a clase.",
+        options: [
+          { text: "A) Cancelar el ejercicio por completo porque 15 minutos no sirven de nada.", correct: false, energy: -10, compassion: -15, feedback: "Refuerza la mentalidad de 'todo o nada'." },
+          { text: "B) Hacer una sesión adaptada de caminata o movilidad de 10 minutos.", correct: true, energy: +10, compassion: +20, feedback: "¡Excelente! Mantienes la señal del hábito reduciendo la fricción." },
+          { text: "C) Exigirte los 45 minutos aunque llegues tarde a la primera clase.", correct: false, energy: -25, compassion: -10, feedback: "Genera estrés por impuntualidad." }
+        ]
+      },
+      {
+        id: 3,
+        title: "Caso 3: La parálisis de inicio",
+        student: "Elena",
+        context: "Tienes que redactar un ensayo final de 10 páginas. Llevas una hora mirando la pantalla en blanco abrumada por el volumen de trabajo.",
+        options: [
+          { text: "A) Aplicar la regla de los 2 minutos: escribir solo una oración o párrafo inicial.", correct: true, energy: +5, compassion: +20, feedback: "¡Muy bien! Vences la resistencia inicial bajando el umbral de esfuerzo." },
+          { text: "B) Obligarte a no levantarte del escritorio hasta completar 3 páginas completas.", correct: false, energy: -20, compassion: -15, feedback: "Aumenta la ansiedad y la parálisis cognitiva." },
+          { text: "C) Dejar la tarea para mañana esperando tener más inspiración.", correct: false, energy: -10, compassion: -10, feedback: "Posterga el estrés sin resolver la fricción." }
+        ]
+      }
+    ];
+
+    // CARTAS DE REENCUADRE
+    const reframingCards = [
+      { front: "Arruiné mi semana porque no estudié el martes.", back: "Tuve un pico de cansancio. Reajusto mi plan hoy con empatía." },
+      { front: "Debo rendir al 100% todos los días.", back: "Mi capacidad cambia según mi energía. Adaptarme es inteligente." },
+      { front: "Descansar es perder el tiempo.", back: "El descanso activo es parte imprescindible de la consolidación cognitiva." }
+    ];
+
+    // INICIALIZACIÓN
+    function startExperience(e) {
+      e.preventDefault();
+      const input = document.getElementById('user-name-input').value.trim();
+      if (!input) return;
+      currentUser = input;
+      document.getElementById('nav-user-name').innerText = currentUser;
+      document.getElementById('screen-welcome').classList.add('hidden');
+      renderCase();
+      renderCards();
+      initRoulette();
+    }
+
+    // RENDERIZAR CASO EVALUATIVO
+    function renderCase() {
+      const container = document.getElementById('case-container');
+      if (currentCaseIndex >= cases.length) {
+        showCompletionScreen();
+        return;
+      }
+
+      const c = cases[currentCaseIndex];
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Evaluación ${currentCaseIndex + 1} de ${cases.length}</span>
+            <span>Protagonista: ${c.student}</span>
+          </div>
+          <h3 class="text-xl font-bold text-white">${c.title}</h3>
+          <p class="text-slate-300 text-sm leading-relaxed bg-slate-900/60 p-4 rounded-xl border border-slate-800">${c.context}</p>
+          <div class="space-y-3 pt-2">
+            ${c.options.map((opt, idx) => `
+              <button onclick="selectOption(${idx})" class="w-full text-left p-4 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition text-sm text-slate-200">
+                ${opt.text}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function selectOption(optionIndex) {
+      const c = cases[currentCaseIndex];
+      const opt = c.options[optionIndex];
+      
+      energy = Math.max(0, Math.min(100, energy + opt.energy));
+      compassion = Math.max(0, Math.min(150, compassion + opt.compassion));
+      
+      document.getElementById('stat-energy').innerText = `${energy}%`;
+      document.getElementById('stat-compassion').innerText = `${compassion} pts`;
+
+      playBeep(opt.correct ? 523.25 : 220); // Sonido sintetizado
+
+      const container = document.getElementById('case-container');
+      container.innerHTML = `
+        <div class="space-y-4 text-center py-6">
+          <div class="w-12 h-12 ${opt.correct ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500' : 'bg-rose-500/20 text-rose-400 border-rose-500'} border rounded-full flex items-center justify-center mx-auto text-xl">
+            <i class="fa-solid ${opt.correct ? 'fa-check' : 'fa-xmark'}"></i>
+          </div>
+          <h3 class="text-lg font-bold ${opt.correct ? 'text-emerald-400' : 'text-rose-400'}">${opt.correct ? 'Análisis Adecuado' : 'Opción Punitiva / Poco Sostenible'}</h3>
+          <p class="text-slate-300 text-sm max-w-md mx-auto">${opt.feedback}</p>
+          <button onclick="nextCase()" class="mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 px-6 rounded-xl transition">
+            Siguiente Escenario
+          </button>
+        </div>
+      `;
+    }
+
+    function nextCase() {
+      currentCaseIndex++;
+      renderCase();
+    }
+
+    function showCompletionScreen() {
+      const today = new Date().toLocaleDateString('es-ES');
+      document.getElementById('cert-user-name').innerText = currentUser;
+      document.getElementById('cert-date').innerText = today;
+      document.getElementById('cert-score').innerText = `${compassion} pts`;
+      document.getElementById('cert-energy').innerText = `${energy}%`;
+      document.getElementById('cert-id').innerText = `#${Math.floor(100000 + Math.random() * 900000)}`;
+
+      let feedback = "Has demostrado una excelente comprensión de la disciplina amable, priorizando el cuidado de tus recursos cognitivos y fisiológicos.";
+      if (compassion < 100) {
+        feedback = "Has completado la evaluación. Recuerda revisar la regla de los 2 minutos y flexibilizar las expectativas para evitar el agotamiento.";
+      }
+      document.getElementById('cert-feedback').innerText = feedback;
+      document.getElementById('modal-certificate').classList.remove('hidden');
+    }
+
+    function closeCertificate() {
+      document.getElementById('modal-certificate').classList.add('hidden');
+    }
+
+    // DESCARGAR COMPROBANTE PNG
+    function downloadCertificate() {
+      const node = document.getElementById('certificate-node');
+      html2canvas(node, { backgroundColor: '#0f172a', scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Comprobante_Autocuidado_${currentUser.replace(/\s+/g, '_')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // CARTAS DE REENCUADRE COGNITIVO
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = reframingCards.map((card, idx) => `
+        <div class="card-flip h-40 cursor-pointer" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner w-full h-full relative rounded-2xl shadow-lg">
+            <div class="card-front absolute inset-0 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+              <span class="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Pensamiento Rígido</span>
+              <p class="text-xs text-slate-300 italic">"${card.front}"</p>
+              <span class="text-[10px] text-slate-500 text-right">Toca para reencuadrar <i class="fa-solid fa-rotate mr-1"></i></span>
+            </div>
+            <div class="card-back absolute inset-0 bg-indigo-950/80 border border-indigo-500/40 rounded-2xl p-4 flex flex-col justify-between">
+              <span class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Voz Amable</span>
+              <p class="text-xs text-indigo-100 font-medium">"${card.back}"</p>
+              <span class="text-[10px] text-indigo-400 text-right"><i class="fa-solid fa-heart mr-1"></i> Autocompasión</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // RULETA DE RETOS
+    const rouletteItems = ["Pausa de 5 min sin pantalla", "Vaso de agua en el escritorio", "Caminata ligera de 10 min", "Estiramiento de cuello", "Escribir 1 idea en 2 min"];
+    function initRoulette() {
+      const canvas = document.getElementById('roulette-canvas');
+      const ctx = canvas.getContext('2d');
+      const colors = ['#6366f1', '#f43f5e', '#10b981', '#06b6d4', '#8b5cf6'];
+      
+      let angle = 0;
+      const slice = (Math.PI * 2) / rouletteItems.length;
+
+      rouletteItems.forEach((item, i) => {
+        ctx.beginPath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.moveTo(128, 128);
+        ctx.arc(128, 128, 128, angle, angle + slice);
+        ctx.lineTo(128, 128);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(128, 128);
+        ctx.rotate(angle + slice / 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText(item.substring(0, 15) + '...', 40, 4);
+        ctx.restore();
+
+        angle += slice;
+      });
+    }
+
+    function spinRoulette() {
+      const btn = document.getElementById('btn-spin');
+      btn.disabled = true;
+      const resultDiv = document.getElementById('roulette-result');
+      resultDiv.innerText = "Girando...";
+      playBeep(440);
+
+      setTimeout(() => {
+        const randomItem = rouletteItems[Math.floor(Math.random() * rouletteItems.length)];
+        resultDiv.innerHTML = `<strong class="text-indigo-400">Reto asignado:</strong> ${randomItem}`;
+        btn.disabled = false;
+        playBeep(880);
+      }, 1500);
+    }
+
+    // RESPIRACIÓN GUIADA 4-7-8
+    function toggleBreathing() {
+      const label = document.getElementById('breath-label');
+      const btn = document.getElementById('btn-breath');
+      
+      if (breathInterval) {
+        clearInterval(breathInterval);
+        breathInterval = null;
+        label.innerText = "Presiona Iniciar";
+        btn.innerText = "Iniciar Ejercicio";
+      } else {
+        btn.innerText = "Detener";
+        let step = 0;
+        const steps = ["Inhala (4s)...", "Sostén (7s)...", "Exhala (8s)..."];
+        label.innerText = steps[0];
+        
+        breathInterval = setInterval(() => {
+          step = (step + 1) % steps.length;
+          label.innerText = steps[step];
+        }, 4000);
+      }
+    }
+
+    // AUDIO SINTETIZADO (WEB AUDIO API)
+    function toggleAudioEngine() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      isAudioActive = !isAudioActive;
+      const icon = document.getElementById('audio-icon');
+      icon.className = isAudioActive ? "fa-solid fa-volume-high text-indigo-400" : "fa-solid fa-volume-xmark text-slate-400";
+      if (isAudioActive) playBeep(523.25);
+    }
+
+    function playBeep(freq) {
+      if (!audioCtx || !isAudioActive) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>
